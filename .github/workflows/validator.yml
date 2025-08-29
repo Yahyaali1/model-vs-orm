@@ -11,6 +11,7 @@ on:
 permissions:
   models: read
   pull-requests: write
+  contents: read
 
 jobs:
   lint-conventions:
