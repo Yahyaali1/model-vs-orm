@@ -40,12 +40,10 @@ jobs:
         id: lint_analysis
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_BASE_REF: ${{ github.base_ref }}
-          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
-        run: |
-          chmod +x ./.github/scripts/run-convention-linter.sh
-          ./.github/scripts/run-convention-linter.sh
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GITHUB_BASE_REF: ${{ github.base_ref }}
+            CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+        run: node ./.github/scripts/run-convention-linter.js
 
       - name: Comment on PR with Errors
         if: failure()
