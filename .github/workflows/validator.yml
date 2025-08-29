@@ -40,24 +40,10 @@ jobs:
         id: lint_analysis
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-            GITHUB_BASE_REF: ${{ github.base_ref }}
-            CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
-        run: node ./.github/scripts/run-convention-linter.js
-
-      - name: Comment on PR with Errors
-        if: failure()
-        uses: peter-evans/create-or-update-comment@v4
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          issue-number: ${{ github.event.pull_request.number }}
-          body: |
-            ### 🤖 Convention Linter Failed!
-            
-            The following naming convention violations were found:
-            
-            ```
-            ${{ env.LINTER_OUTPUT }}
-            ```
-            
-            Please fix these issues and push your changes.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+          CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+          # Add these two lines:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          run: node ./.github/scripts/run-convention-linter.js

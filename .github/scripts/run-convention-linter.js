@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-const {execSync} = require('child_process');
+const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
@@ -9,7 +9,8 @@ const path = require('path');
 // - GITHUB_BASE_REF: The base branch for comparison (e.g., 'main').
 // - CHANGED_FILES: A space-separated string of changed filenames.
 // - GITHUB_TOKEN: A token with permissions to call the GitHub Models API.
-// - GITHUB_ENV: The path to the file for setting environment variables for subsequent steps.
+// - GITHUB_REPOSITORY: The full repository name (e.g., 'owner/repo').
+// - PR_NUMBER: The number of the pull request.
 
 /**
  * Main function to execute the convention linting process.
@@ -18,10 +19,10 @@ async function main() {
     console.log("🔍 Analyzing naming convention violations...");
 
     // --- 1. Get required variables from the environment ---
-    const {GITHUB_BASE_REF, CHANGED_FILES, GITHUB_TOKEN, GITHUB_ENV} = process.env;
+    const { GITHUB_BASE_REF, CHANGED_FILES, GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER } = process.env;
 
-    if (!GITHUB_BASE_REF || !CHANGED_FILES || !GITHUB_TOKEN || !GITHUB_ENV) {
-        console.error("❌ Missing required environment variables (GITHUB_BASE_REF, CHANGED_FILES, GITHUB_TOKEN, GITHUB_ENV).");
+    if (!GITHUB_BASE_REF || !CHANGED_FILES || !GITHUB_TOKEN || !GITHUB_REPOSITORY || !PR_NUMBER) {
+        console.error("❌ Missing required environment variables (GITHUB_BASE_REF, CHANGED_FILES, GITHUB_TOKEN, GITHUB_REPOSITORY, PR_NUMBER).");
         process.exit(1);
     }
 
@@ -66,7 +67,7 @@ async function main() {
             messages: [{
                 role: 'user',
                 content: fullPrompt,
-            },],
+            }, ],
             model: 'openai/gpt-4o',
         };
 
@@ -103,12 +104,13 @@ async function main() {
         console.log(responseText);
         console.log("-----------------------------------");
 
-        // --- 8. Set output for subsequent GitHub Actions steps ---
-        fs.appendFileSync(GITHUB_ENV, `LINTER_OUTPUT=${responseText}\n`);
-
-        // --- 9. Determine success or failure ---
+        // --- 8. Determine success or failure and comment on PR ---
         if (responseText !== "OK") {
-            console.log("💔 Convention violations found.");
+            console.log("💔 Convention violations found. Posting a comment on the PR...");
+
+            // Post the comment directly to the PR.
+            await postPrComment(responseText, PR_NUMBER, GITHUB_REPOSITORY, GITHUB_TOKEN);
+
             process.exit(1);
         } else {
             console.log("🎉 Success! No convention violations found.");
@@ -120,5 +122,50 @@ async function main() {
     }
 }
 
+/**
+ * Posts a comment to the GitHub Pull Request.
+ * @param {string} linterOutput - The content of the comment.
+ * @param {string} prNumber - The number of the pull request.
+ * @param {string} repoFullName - The full repository name (e.g., 'owner/repo').
+ * @param {string} token - The GitHub token.
+ */
+async function postPrComment(linterOutput, prNumber, repoFullName, token) {
+    const [owner, repo] = repoFullName.split('/');
+    const apiUrl = `https://api.github.com/repos/${owner}/${repo}/issues/${prNumber}/comments`;
+
+    const commentBody = `### 🤖 Convention Linter Failed!
+            
+The following naming convention violations were found:
+
+\`\`\`
+${linterOutput}
+\`\`\`
+
+Please fix these issues and push your changes.`;
+
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/vnd.github.v3+json',
+            },
+            body: JSON.stringify({ body: commentBody }),
+        });
+
+        if (response.ok) {
+            console.log("✅ Successfully posted comment to PR.");
+        } else {
+            const errorText = await response.text();
+            console.error(`❌ Failed to post comment on PR. Status: ${response.status}`);
+            console.error("Response:", errorText);
+        }
+    } catch (error) {
+        console.error("An error occurred while trying to post the PR comment:", error);
+    }
+}
+
 // Execute the script
 main();
+
