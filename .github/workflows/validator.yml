@@ -45,4 +45,6 @@ jobs:
           # Add these two lines:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
+          GEMINI_API_KEY: ${{secrets.GITHUB_TOKEN}}
+          AI_PROVIDER: 'github'
         run: node ./.github/scripts/run-convention-linter.js
