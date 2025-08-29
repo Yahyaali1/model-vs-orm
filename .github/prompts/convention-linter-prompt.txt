@@ -9,12 +9,17 @@ Perform a comprehensive cross-validation between Sequelize model definitions and
 - Missing migration columns that lack model attributes
 - Mismatched data types, constraints, and relationships
 - Incomplete or incorrect migration reversibility
+- Missing migration file for changes in model files
+- Missing model files for changes in migration file
 
 ## Analysis Categories
 
 ### 1. Naming Convention Compliance
+- **Rules**: Attributes in migration file shall always be in snake case
+- **Rules**: Attributes in model file shall always be in camelCase
 - **Model-to-Table Mapping**: PascalCase singular models (e.g., `UserProfile`) must map to snake_case plural tables (e.g., `user_profiles`)
 - **Attribute-to-Column Mapping**: camelCase model attributes (e.g., `firstName`) must map to snake_case columns (e.g., `first_name`)
+
 
 ### 2. Structural Integrity Validation
 - **Attribute/Column Parity**: Every new model attribute requires a corresponding migration column and vice-versa

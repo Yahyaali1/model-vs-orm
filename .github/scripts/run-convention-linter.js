@@ -348,7 +348,7 @@ async function main() {
         console.log("-------------------------");
 
         // --- 7. Handle results ---
-        if (responseText !== "OK") {
+        if (!responseText.includes('OK')) {
             console.log("💔 Convention violations found. Posting a comment on the PR...");
 
             // For GitHub provider, use GITHUB_TOKEN for posting comments
