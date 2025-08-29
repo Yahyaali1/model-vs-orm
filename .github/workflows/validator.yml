@@ -35,7 +35,6 @@ jobs:
             src/models/**.model.ts
             src/**.entity.ts
             src/migrations/**.js
-
       - name: Run Convention Linter
         id: lint_analysis
         if: steps.changed-files.outputs.any_changed == 'true'
@@ -46,4 +45,4 @@ jobs:
           # Add these two lines:
           GITHUB_REPOSITORY: ${{ github.repository }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-          run: node ./.github/scripts/run-convention-linter.js
+        run: node ./.github/scripts/run-convention-linter.js
