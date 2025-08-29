@@ -89,4 +89,25 @@ export class Address extends Model<CreateAddressParams> {
         allowNull: true
     })
     smartyData: usStreet.Candidate
+
+    // Add these new properties
+    @Column({
+        type: DataType.STRING,
+        allowNull: false,
+        defaultValue: 'USA'
+    })
+    country: string
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true
+    })
+    timezone: string
+
+    @Column({
+        type: DataType.BOOLEAN,
+        allowNull: true
+    })
+    isResidential: boolean
 }
+
