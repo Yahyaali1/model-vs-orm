@@ -7,7 +7,7 @@ module.exports = {
     try {
       // Add a 'country' column to store the country name or code.
       await queryInterface.addColumn(
-        'Addresses', // Table name
+        'addresses', // Table name
         'country',   // New column name
         {
           type: Sequelize.DataTypes.STRING,
@@ -19,7 +19,7 @@ module.exports = {
 
       // Add a 'timezone' column to store the IANA time zone (e.g., "America/New_York").
       await queryInterface.addColumn(
-        'Addresses',
+        'addresses',
         'timezone',
         {
           type: Sequelize.DataTypes.STRING,
@@ -30,8 +30,8 @@ module.exports = {
 
       // Add a boolean flag to identify if the address is residential.
       await queryInterface.addColumn(
-        'Addresses',
-        'isResidential',
+        'addresses',
+        'is_residential',
         {
           type: Sequelize.DataTypes.BOOLEAN,
           allowNull: true, // Use true, false, or null if unknown
@@ -50,9 +50,9 @@ module.exports = {
     const transaction = await queryInterface.sequelize.transaction();
     try {
       // The 'down' method should reverse the changes made in 'up'.
-      await queryInterface.removeColumn('Addresses', 'isResidential', { transaction });
-      await queryInterface.removeColumn('Addresses', 'timezone', { transaction });
-      await queryInterface.removeColumn('Addresses', 'country', { transaction });
+      await queryInterface.removeColumn('addresses', 'is_residential', { transaction });
+      await queryInterface.removeColumn('addresses', 'timezone', { transaction });
+      await queryInterface.removeColumn('addresses', 'country', { transaction });
       await transaction.commit();
     } catch (err) {
       await transaction.rollback();
