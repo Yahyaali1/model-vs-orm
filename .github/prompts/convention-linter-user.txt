@@ -1,0 +1,46 @@
+# Code Review Request
+
+Please analyze the following code changes from a pull request and validate that all Sequelize models and migrations follow our strict conventions and maintain consistency.
+
+## Context
+- **Repository**: NestJS application using Sequelize ORM with PostgreSQL
+- **Focus**: Validate naming conventions and model-migration consistency
+- **Scope**: Only analyze NEW or MODIFIED code (lines starting with '+' in diffs)
+
+## Your Task
+
+1. **Check naming conventions**:
+   - Migration columns must be snake_case
+   - Model attributes must be camelCase
+   - Validate proper case mapping between models and migrations
+
+2. **Verify structural integrity**:
+   - Every model attribute needs a migration column
+   - Every migration column needs a model attribute
+   - Foreign keys must be properly defined
+
+3. **Validate data types**:
+   - Types must match between model and migration
+   - Constraints must be identical
+   - Default values must align
+
+4. **Ensure migration safety**:
+   - Check for complete up/down methods
+   - Verify reversibility
+   - Flag destructive operations
+
+## Code Changes to Analyze
+
+__DIFF_DATA__
+
+## Expected Output
+
+If all conventions are followed and there are no issues, respond with: `OK`
+
+If you find any violations, list each one using the ERROR format specified in your instructions, providing:
+- The specific violation category
+- Exact file and line references
+- The potential impact
+- Clear instructions to fix the issue
+
+Be thorough and precise in your analysis. Check every model attribute against its corresponding migration column and vice versa.
