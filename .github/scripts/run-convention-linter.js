@@ -226,20 +226,65 @@ function validateEnvironment(provider) {
 }
 
 /**
- * Generates diff content for changed files
+ * Reads the complete content of a file
+ */
+function getFileContent(file) {
+    try {
+        if (!fs.existsSync(file)) {
+            return null;
+        }
+        return fs.readFileSync(file, 'utf8');
+    } catch (error) {
+        console.warn(`Could not read file content for: ${file}`, error.message);
+        return null;
+    }
+}
+
+/**
+ * Checks if a file is a .mode.ts file
+ */
+function isModeFile(file) {
+    return file.endsWith('.model.ts');
+}
+
+/**
+ * Generates enhanced diff content for changed files with special handling for .mode.ts files
  */
 function generateDiffContent(changedFiles, baseRef) {
     let diffContent = '';
 
     for (const file of changedFiles) {
         console.log(`  - Processing diff for: ${file}`);
+
         try {
             const fileDiff = execSync(`git diff origin/${baseRef} HEAD -- "${file}"`).toString();
+
             if (fileDiff) {
                 diffContent += `\n\n--- Diff for ${file} ---\n${fileDiff}`;
+
+                // Special handling for .mode.ts files
+                if (isModeFile(file)) {
+                    console.log(`  📄 Detected .mode.ts file: ${file} - fetching complete content for better context`);
+
+                    const fullContent = getFileContent(file);
+                    if (fullContent) {
+                        diffContent += `\n\n--- Complete model.ts File Content for ${file} (for additional context) ---\n${fullContent}`;
+                    } else {
+                        console.warn(`Could not read complete content for .model.ts file: ${file}`);
+                    }
+                }
             }
         } catch (error) {
             console.warn(`Could not get diff for file: ${file}. It might have been deleted.`, error.message);
+
+            // Even if diff fails, try to get content for .mode.ts files if they exist
+            if (isModeFile(file)) {
+                const fullContent = getFileContent(file);
+                if (fullContent) {
+                    console.log(`  📄 Fetching complete content for existing .mode.ts file: ${file}`);
+                    diffContent += `\n\n--- Complete File Content for ${file} (file may be new or renamed) ---\n${fullContent}`;
+                }
+            }
         }
     }
 
@@ -329,7 +374,7 @@ async function main() {
         console.log(`Fetching base branch: ${config.baseRef}`);
         execSync(`git fetch origin ${config.baseRef}`);
 
-        // --- 4. Generate diff content ---
+        // --- 4. Generate enhanced diff content ---
         const diffContent = generateDiffContent(config.changedFiles, config.baseRef);
 
         if (!diffContent.trim()) {
@@ -391,6 +436,10 @@ Supported AI Providers:
 ${Object.entries(AI_PROVIDERS).map(([key, config]) =>
         `  ${key.padEnd(10)} - ${config.name} (${config.model})`
     ).join('\n')}
+
+Special Features:
+  - Enhanced .mode.ts file analysis with complete file context
+  - Improved diff processing for better AI understanding
 
 Examples:
   # Using GitHub Models (default)
