@@ -11,8 +11,9 @@ const path = require('path');
 // - GITHUB_TOKEN: A token with permissions to call the GitHub Models API.
 // - GITHUB_REPOSITORY: The full repository name (e.g., 'owner/repo').
 // - PR_NUMBER: The number of the pull request.
-// - AI_PROVIDER: The AI provider to use ('github' or 'gemini'). Defaults to 'github'.
+// - AI_PROVIDER: The AI provider to use ('github', 'gemini', or 'openai'). Defaults to 'github'.
 // - GEMINI_API_KEY: Required if AI_PROVIDER is 'gemini'.
+// - OPENAI_API_KEY: Required if AI_PROVIDER is 'openai'.
 
 /**
  * Configuration for different AI providers
@@ -29,6 +30,12 @@ const AI_PROVIDERS = {
         endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-thinking-exp:generateContent',
         model: 'gemini-2.0-flash-thinking-exp',
         requiresToken: 'GEMINI_API_KEY'
+    },
+    openai: {
+        name: 'OpenAI ChatGPT',
+        endpoint: 'https://api.openai.com/v1/chat/completions',
+        model: 'gpt-5',
+        requiresToken: 'OPENAI_API_KEY'
     }
 };
 
@@ -46,8 +53,20 @@ function createGitHubPayload(prompt) {
 }
 
 /**
- * Creates the API payload for Gemini
+ * Creates the API payload for OpenAI ChatGPT
  */
+function createOpenAIPayload(prompt) {
+    return {
+        model: AI_PROVIDERS.openai.model,
+        messages: [{
+            role: 'user',
+            content: prompt,
+        }],
+        temperature: 0.1, // Lower temperature for more consistent analysis
+        max_tokens: 4000
+    };
+}
+
 function createGeminiPayload(prompt) {
     return {
         contents: [{
@@ -89,8 +108,36 @@ async function callGitHubModels(prompt, token) {
 }
 
 /**
- * Makes an API call to Gemini Thinking Model
+ * Makes an API call to OpenAI ChatGPT
  */
+async function callOpenAI(prompt, apiKey) {
+    const payload = createOpenAIPayload(prompt);
+
+    const response = await fetch(AI_PROVIDERS.openai.endpoint, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`OpenAI API call failed with status ${response.status}: ${errorText}`);
+    }
+
+    const responseData = await response.json();
+    const responseText = responseData.choices?.[0]?.message?.content?.trim();
+
+    if (!responseText) {
+        console.log("Debug: Full OpenAI response:", JSON.stringify(responseData, null, 2));
+        throw new Error("Invalid response from OpenAI API");
+    }
+
+    return responseText;
+}
+
 async function callGemini(prompt, apiKey) {
     const payload = createGeminiPayload(prompt);
     const url = `${AI_PROVIDERS.gemini.endpoint}?key=${apiKey}`;
@@ -143,6 +190,8 @@ async function callAIProvider(provider, prompt, token) {
             return await callGitHubModels(prompt, token);
         case 'gemini':
             return await callGemini(prompt, token);
+        case 'openai':
+            return await callOpenAI(prompt, token);
         default:
             throw new Error(`Unsupported AI provider: ${provider}`);
     }
@@ -347,8 +396,11 @@ Examples:
   # Using GitHub Models (default)
   AI_PROVIDER=github ./convention-linter.js
   
-  # Using Gemini
+  # Using Gemini Thinking Model
   AI_PROVIDER=gemini ./convention-linter.js
+  
+  # Using OpenAI ChatGPT-5
+  AI_PROVIDER=openai ./convention-linter.js
 `);
 }
 
