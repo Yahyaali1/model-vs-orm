@@ -8,10 +8,10 @@ on:
       - 'src/models/**.model.ts'
       - 'src/migrations/**.js'
 
-permissions:
-  models: read
-  pull-requests: write
-  contents: read
+#permissions:
+#  models: read
+#  pull-requests: write
+#  contents: read uncomment these
 
 jobs:
   lint-conventions:
@@ -39,7 +39,7 @@ jobs:
         id: lint_analysis
         if: steps.changed-files.outputs.any_changed == 'true'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+#          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
           CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
           # Add these two lines:
